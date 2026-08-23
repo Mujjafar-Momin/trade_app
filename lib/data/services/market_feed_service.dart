@@ -20,8 +20,12 @@ class MarketFeedService {
   final RxBool isLoading = true.obs;
   final RxString loadError = ''.obs;
 
-  Timer? _ticker;
-  Duration _tickInterval = const Duration(milliseconds: 200);
+  final Map<String, Timer> _tickers = {};
+
+  final Map<String, Duration> _tickIntervals = {};
+  static const Duration _minTickInterval = Duration(seconds: 1);
+  static const Duration _maxTickInterval = Duration(seconds: 5);
+
   bool _initialized = false;
 
   static const double _maxDriftPercent = 10.0;
@@ -35,6 +39,7 @@ class MarketFeedService {
       for (final stock in stocks) {
         symbols.add(stock.symbol);
         prices[stock.symbol] = PriceTick.initial(stock).obs;
+        _tickIntervals[stock.symbol] = _randomInterval();
       }
       isLoading.value = false;
       _startTicking();
@@ -47,17 +52,36 @@ class MarketFeedService {
 
   PriceTick? snapshot(String symbol) => prices[symbol]?.value;
 
-  void _startTicking() {
-    _ticker?.cancel();
-    _ticker = Timer.periodic(_tickInterval, (_) => _tickAll());
+  Duration _randomInterval() {
+    final rangeMs = _maxTickInterval.inMilliseconds - _minTickInterval.inMilliseconds;
+    return Duration(milliseconds: _minTickInterval.inMilliseconds + _random.nextInt(rangeMs + 1));
   }
 
-  void _tickAll() {
+  void _startTicking() {
+    _stopTicking();
     for (final symbol in symbols) {
-      final rx = prices[symbol];
-      if (rx == null) continue;
+      _scheduleNextTick(symbol);
+    }
+  }
+
+  void _stopTicking() {
+    for (final timer in _tickers.values) {
+      timer.cancel();
+    }
+    _tickers.clear();
+  }
+
+  void _scheduleNextTick(String symbol) {
+    final interval = _tickIntervals[symbol] ?? _randomInterval();
+    _tickers[symbol] = Timer(interval, () => _tickOne(symbol));
+  }
+
+  void _tickOne(String symbol) {
+    final rx = prices[symbol];
+    if (rx != null) {
       rx.value = _nextTick(rx.value);
     }
+    _scheduleNextTick(symbol);
   }
 
   PriceTick _nextTick(PriceTick current) {
@@ -85,19 +109,28 @@ class MarketFeedService {
   }
 
   Decimal _roundTo2dp(Decimal value) {
-    final scaled = (value * Decimal.fromInt(100)).round(); // integer Decimal
+    final scaled = (value * Decimal.fromInt(100)).round();
     return (scaled / Decimal.fromInt(100)).toDecimal(scaleOnInfinitePrecision: 2);
   }
 
-  void setTickInterval(Duration interval) {
-    _tickInterval = interval;
+  void setTickIntervalRange({required Duration min, required Duration max}) {
+    final rangeMs = max.inMilliseconds - min.inMilliseconds;
+    for (final symbol in symbols) {
+      _tickIntervals[symbol] = Duration(milliseconds: min.inMilliseconds + _random.nextInt(rangeMs + 1));
+    }
     if (!isLoading.value) _startTicking();
   }
 
-  Duration get tickInterval => _tickInterval;
+  void setUniformTickInterval(Duration interval) {
+    for (final symbol in symbols) {
+      _tickIntervals[symbol] = interval;
+    }
+    if (!isLoading.value) _startTicking();
+  }
+
+  Duration intervalFor(String symbol) => _tickIntervals[symbol] ?? _maxTickInterval;
 
   void dispose() {
-    _ticker?.cancel();
-    _ticker = null;
+    _stopTicking();
   }
 }

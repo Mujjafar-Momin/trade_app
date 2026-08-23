@@ -3,17 +3,8 @@ import 'package:trading_app/core/theme/app_colors.dart';
 
 /// [AppColorExtension]
 /// A Flutter ThemeExtension holding all theme-dependent colors (text,
-/// surface, border) PLUS the theme-independent semantic ones (success/error)
-/// for convenience, so a widget only ever needs ONE lookup:
-///
-/// ```dart
-/// final colors = context.appColors;
-/// Text('₹2,950.00', style: TextStyle(color: colors.textPrimary));
-/// ```
-///
-/// No `isDark ? a : b` anywhere in the UI — AppTheme.light/dark each
-/// attach the correct resolved instance, and this class is looked up
-/// once via Theme.of(context), same cost as reading colorScheme.
+/// surface, border, primary) PLUS the theme-independent semantic ones
+/// (success/error) for convenience, so a widget only ever needs ONE
 @immutable
 class AppColorExtension extends ThemeExtension<AppColorExtension> {
   final Color background;
@@ -23,6 +14,7 @@ class AppColorExtension extends ThemeExtension<AppColorExtension> {
   final Color textPrimary;
   final Color textSecondary;
   final Color textDisabled;
+  final Color primary;
   final Color success;
   final Color successBg;
   final Color error;
@@ -37,10 +29,11 @@ class AppColorExtension extends ThemeExtension<AppColorExtension> {
     required this.textPrimary,
     required this.textSecondary,
     required this.textDisabled,
+    required this.primary,
     required this.success,
     required this.successBg,
-    required this.errorBg,
     required this.error,
+    required this.errorBg,
     required this.neutral,
   });
 
@@ -52,6 +45,7 @@ class AppColorExtension extends ThemeExtension<AppColorExtension> {
     textPrimary: AppColors.lightTextPrimary,
     textSecondary: AppColors.lightTextSecondary,
     textDisabled: AppColors.lightTextDisabled,
+    primary: AppColors.primary,
     success: AppColors.success,
     successBg: AppColors.successBg,
     error: AppColors.error,
@@ -67,6 +61,7 @@ class AppColorExtension extends ThemeExtension<AppColorExtension> {
     textPrimary: AppColors.darkTextPrimary,
     textSecondary: AppColors.darkTextSecondary,
     textDisabled: AppColors.darkTextDisabled,
+    primary: AppColors.primaryLight,
     success: AppColors.success,
     successBg: AppColors.successBg,
     error: AppColors.error,
@@ -83,6 +78,7 @@ class AppColorExtension extends ThemeExtension<AppColorExtension> {
     Color? textPrimary,
     Color? textSecondary,
     Color? textDisabled,
+    Color? primary,
     Color? success,
     Color? successBg,
     Color? error,
@@ -97,6 +93,7 @@ class AppColorExtension extends ThemeExtension<AppColorExtension> {
       textPrimary: textPrimary ?? this.textPrimary,
       textSecondary: textSecondary ?? this.textSecondary,
       textDisabled: textDisabled ?? this.textDisabled,
+      primary: primary ?? this.primary,
       success: success ?? this.success,
       successBg: successBg ?? this.successBg,
       error: error ?? this.error,
@@ -116,6 +113,7 @@ class AppColorExtension extends ThemeExtension<AppColorExtension> {
       textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
       textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
       textDisabled: Color.lerp(textDisabled, other.textDisabled, t)!,
+      primary: Color.lerp(primary, other.primary, t)!,
       success: Color.lerp(success, other.success, t)!,
       successBg: Color.lerp(successBg, other.successBg, t)!,
       error: Color.lerp(error, other.error, t)!,

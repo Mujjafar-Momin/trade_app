@@ -3,9 +3,10 @@ import 'package:trading_app/trade_app.dart';
 
 class WalletRepository {
   WalletRepository._internal();
-  static final WalletRepository _instance = WalletRepository._internal();
-  factory WalletRepository() => _instance;
 
+  static final WalletRepository _instance = WalletRepository._internal();
+
+  factory WalletRepository() => _instance;
 
   Wallet get() {
     final raw = AppStorage.read<String>(AppStorageKeys.wallet);

@@ -2,118 +2,126 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:trading_app/trade_app.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
+  late final AnimationController _entranceController;
+  late final Animation<double> _fadeIn;
+  late final Animation<double> _scaleIn;
+
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseScale;
+
+  @override
+  void initState() {
+    super.initState();
+    _entranceController = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+    _fadeIn = CurvedAnimation(parent: _entranceController, curve: Curves.easeOut);
+    _scaleIn = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _entranceController, curve: Curves.easeOutBack),
+    );
+
+    _pulseController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1600))
+      ..repeat(reverse: true);
+    _pulseScale = Tween<double>(begin: 1.0, end: 1.06).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
+    _entranceController.forward();
+  }
+
+  @override
+  void dispose() {
+    _entranceController.dispose();
+    _pulseController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: const Icon(
-                    Icons.candlestick_chart_rounded,
-                    color: Colors.white,
-                    size: 44,
-                  ),
+    return GetBuilder<SplashController>(builder: (context) {
+      return Scaffold(
+        body: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [colors.background, colors.primary.withValues(alpha: .05)],
+            ),
+          ),
+          child: SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedBuilder(
+                      animation: Listenable.merge([_entranceController, _pulseController]),
+                      builder: (context, child) {
+                        return Opacity(
+                          opacity: _fadeIn.value,
+                          child: Transform.scale(
+                            scale: _scaleIn.value * _pulseScale.value,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: const _LogoImage(),
+                    ),
+                    const SizedBox(height: 44),
+                    FadeTransition(
+                      opacity: _fadeIn,
+                      child: Text(
+                        'Practice trading with real-time simulated markets',
+                        style: AppTextStyles.medium14.copyWith(color: colors.textSecondary),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 20),
-                Text(
-                  'TradeApp',
-                  style: AppTextStyles.bold18.copyWith(
-                    color: colors.textPrimary,
-                    fontSize: 24,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Simulated market trading',
-                  style: AppTextStyles.regular14.copyWith(
-                    color: colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 48),
-                GetBuilder<SplashController>(
-                  builder: (controller) {
-                    if (controller.hasError) {
-                      return _ErrorState(
-                        message: controller.statusMessage,
-                        onRetry: controller.retry,
-                      );
-                    }
-                    return _LoadingState(message: controller.statusMessage);
-                  },
-                ),
-              ],
+              ),
             ),
           ),
         ),
+      );
+    });
+  }
+}
+
+class _LogoImage extends StatelessWidget {
+  const _LogoImage();
+
+  @override
+  Widget build(BuildContext context) {
+    final logoWidth = (MediaQuery.sizeOf(context).width * 0.58).clamp(180.0, 260.0);
+
+    return Material(
+      elevation: 16,
+      shadowColor: Colors.black.withValues(alpha: .35),
+      borderRadius: BorderRadius.circular(28),
+      clipBehavior: Clip.antiAlias,
+      color: Colors.transparent,
+      child: Image.asset(
+        'assets/images/app_logo.png',
+        width: logoWidth,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: logoWidth,
+            height: logoWidth,
+            color: const Color(0xFF0B1220),
+            alignment: Alignment.center,
+            child: const Icon(Icons.candlestick_chart_rounded, color: Colors.white, size: 56),
+          );
+        },
       ),
-    );
-  }
-}
-
-class _LoadingState extends StatelessWidget {
-  final String message;
-
-  const _LoadingState({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.primary),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          message,
-          style: Theme.of(context).textTheme.bodySmall,
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-}
-
-class _ErrorState extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _ErrorState({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 32),
-        const SizedBox(height: 12),
-        Text(
-          message,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.error),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 16),
-        ElevatedButton(
-          onPressed: onRetry,
-          child: const Text('Retry'),
-        ),
-      ],
     );
   }
 }

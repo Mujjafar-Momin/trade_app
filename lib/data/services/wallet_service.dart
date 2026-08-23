@@ -3,7 +3,9 @@ import 'package:trading_app/trade_app.dart';
 
 class WalletService {
   WalletService._internal();
+
   static final WalletService _instance = WalletService._internal();
+
   factory WalletService() => _instance;
 
   final WalletRepository _repository = WalletRepository();

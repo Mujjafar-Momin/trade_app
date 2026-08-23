@@ -15,7 +15,9 @@ class MyApp extends StatelessWidget {
       title: 'Trade App',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
+      defaultTransition: Transition.rightToLeft,
       themeMode: ThemeMode.system,
+      debugShowCheckedModeBanner: false,
       home: const SplashScreen(),
       initialBinding: SplashBinding(),
     );

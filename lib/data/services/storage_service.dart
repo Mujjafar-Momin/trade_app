@@ -58,5 +58,7 @@ class AppStorageKeys {
   static const storage = AppStorageKeys._('storage');
   static const wallet = AppStorageKeys._('wallet');
   static const holdings = AppStorageKeys._('holdings');
+  static const watchLists = AppStorageKeys._('watchlists');
+  static const orders = AppStorageKeys._('orders');
 
 }
