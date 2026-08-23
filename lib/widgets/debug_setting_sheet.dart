@@ -63,6 +63,7 @@ class DebugSettingsSheet extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               'Resets wallet balance, orders, and holdings. Watchlists are kept.',
+              textAlign: TextAlign.center,
               style: AppTextStyles.regular12.copyWith(color: colors.textSecondary),
             ),
           ],
